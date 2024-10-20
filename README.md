@@ -2,20 +2,28 @@
 
 Стек: HTML, SCSS, TS, Webpack
 
-Структура проекта:
+Структура основных компонентов проекта:
 
-- src/ — исходные файлы проекта
-- src/components/ — папка с JS компонентами
-- src/components/base/ — папка с базовым кодом
-
-Важные файлы:
-
-- src/pages/index.html — HTML-файл главной страницы
-- src/types/index.ts — файл с типами
-- src/index.ts — точка входа приложения
-- src/styles/styles.scss — корневой файл стилей
-- src/utils/constants.ts — файл с константами
-- src/utils/utils.ts — файл с утилитами
+web-larek/
+├── src/
+│ ├── components/ # TypeScript-компоненты
+│ │ ├── base/ # Базовые классы и утилиты
+│ │ ├── controller/ # Контроллеры (представители)
+│ │ ├── model/ # Модели данных и API
+│ │ └── view/ # Отображения (представления)
+│ ├── pages/
+│ │ └── index.html # Главная страница
+│ ├── scss/ # Папка стилей
+│ ├── types/ # Типы и интерфейсы TypeScript
+│ │ └── index.ts # Общие типы
+│ ├── utils/ # Утилиты и константы
+│ │ ├── constants.ts # Константы проекта
+│ │ └── utils.ts # Вспомогательные функции
+│ └── index.ts # Точка входа приложения
+├── .env # Переменные окружения
+├── package.json
+├── README.md # Документация проекта
+└── webpack.config.js # Конфигурация Webpack
 
 ## Установка и запуск
 
