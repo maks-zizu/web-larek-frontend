@@ -1,30 +1,7 @@
-import { IOrder, IProduct } from '../../types';
+import { IAppState, IOrder, IProduct } from '../../types';
 import { IEvents } from '../base/events';
 import { Model } from '../base/Model';
 import { LarekApi } from './LarekApi';
-
-export interface IAppState {
-	productList: IProduct[]; // Список товаров
-	productInfo: IProduct; // Информация о товаре (для инфо карточки)
-	basket: IProduct[]; // список товаров в корзине
-	order: IOrder; // Заказ
-
-	// Действия с API
-	loadProducts(): Promise<void>;
-
-	// Методы управления состоянием
-
-	setProductInfo(productId: string): void;
-
-	addToBasket(productId: string): void; // Добавляем товар в корзину
-	removeFromBasket(productId: string): void; // Удаляем товар из корзины
-	clearBasket(): void; // Очищаем корзину
-	getBasketCount(): number; // Количество товаров в корзине
-	getTotalBasketPrice(): number; // Сумма всех товаров в корзине
-
-	setOrderField(field: keyof IOrder, value: string): void; // Заполяем поля формы заказа
-	submitOrder(): Promise<void>;
-}
 
 export class AppStateModel extends Model implements IAppState {
 	productList: IProduct[];
@@ -92,7 +69,18 @@ export class AppStateModel extends Model implements IAppState {
 		this.order.items = this.basket.map((item) => item.id);
 		this.order.total = this.getTotalBasketPrice();
 		const orderData = await this.api.createOrder(this.order);
+		console.log('Emitting orderSubmitted event', orderData);
 		this.emit('orderSubmitted', orderData);
 		this.clearBasket();
+	}
+
+	async getProductInfo(productId: string): Promise<IProduct> {
+		this.productInfo = await this.api.getProductItem(productId);
+		this.emit('productInfoUpdated', this.productInfo);
+		return this.productInfo;
+	}
+
+	isProductInBasket(productId: string): boolean {
+		return this.basket.some((item) => item.id === productId);
 	}
 }
