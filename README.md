@@ -403,13 +403,13 @@ yarn build
 
 Обработка событий в bindEvents():
 
-- 'addToBasket' — добавление товара в корзину.
-- 'removeFromBasket' — удаление товара из корзины.
-- 'checkout' — начало оформления заказа.
-- 'orderAddressSubmitted' — получение данных адреса и оплаты.
-- 'orderContactsSubmitted' — получение контактной информации.
-- 'orderSubmitted' — заказ успешно отправлен.
-- 'openProductInfo' — открытие предпросмотра товара.
+- `addToBasket` — добавление товара в корзину.
+- `removeFromBasket` — удаление товара из корзины.
+- `checkout` — начало оформления заказа.
+- `orderAddressSubmitted` — получение данных адреса и оплаты.
+- `orderContactsSubmitted` — получение контактной информации.
+- `orderSubmitted` — заказ успешно отправлен.
+- `openProductInfo` — открытие предпросмотра товара.
 
 ## Связь между слоями Model и View через Presenter
 
@@ -423,50 +423,50 @@ yarn build
 
 #### Клики по элементам интерфейса:
 
-- Клик на товар в каталоге ('openProductInfo').
-- Клик на кнопку "В корзину" или "Удалить из корзины" ('addToBasket', 'removeFromBasket').
+- Клик на товар в каталоге (`openProductInfo`).
+- Клик на кнопку "В корзину" или "Удалить из корзины" (`addToBasket`, `removeFromBasket`).
 - Клик на кнопку корзины в шапке сайта (открытие корзины).
-- Клик на кнопку "Оформить" в корзине ('checkout').
+- Клик на кнопку "Оформить" в корзине (`checkout`).
 
 #### Отправка форм:
 
-- Отправка формы выбора способа оплаты и адреса ('orderAddressSubmitted').
-- Отправка формы контактных данных ('orderContactsSubmitted').
+- Отправка формы выбора способа оплаты и адреса (`orderAddressSubmitted`).
+- Отправка формы контактных данных (`orderContactsSubmitted`).
 
 #### Обновления состояния:
 
-- Обновление корзины ('basketUpdated').
-- Загрузка списка товаров ('productsLoaded').
-- Оформление заказа ('orderSubmitted').
+- Обновление корзины (`basketUpdated`).
+- Загрузка списка товаров (`productsLoaded`).
+- Оформление заказа (`orderSubmitted`).
 
 ### Пример взаимодействия:
 
 1. Пользователь нажимает на карточку товара в каталоге.
 
-- View (ProductCard): Эмитирует событие 'openProductInfo' с productId.
+- View (ProductCard): Эмитирует событие `openProductInfo` с productId.
 
 2. Presenter (MainController):
 
-- Подписан на событие 'openProductInfo'.
+- Подписан на событие `openProductInfo`.
 - Вызывает model.getProductInfo(productId) для получения данных товара.
 - Вызывает showProductPreview(product) для отображения предпросмотра.
 
 3. Пользователь нажимает кнопку "В корзину" в предпросмотре товара.
 
-- View (ProductPreview): Эмитирует событие 'addToBasket' с productId.
-- Закрывает модальное окно, эмитируя 'closeModal'.
+- View (ProductPreview): Эмитирует событие `addToBasket` с productId.
+- Закрывает модальное окно, эмитируя `closeModal`.
 
 4. Presenter (MainController):
 
-- Подписан на событие 'addToBasket'.
+- Подписан на событие `addToBasket`.
 - Вызывает model.addToBasket(productId) для добавления товара в корзину.
 
 5. Model (AppStateModel):
 
 - Обновляет состояние корзины.
-- Эмитирует событие 'basketUpdated'.
+- Эмитирует событие `basketUpdated`.
 
 6. View (Basket, MainPage):
 
-- Подписаны на событие 'basketUpdated'.
+- Подписаны на событие `basketUpdated`.
 - Обновляют отображение корзины и счетчика товаров.
