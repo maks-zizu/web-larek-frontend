@@ -1,13 +1,11 @@
 import { IAppState, IOrder, IProduct } from '../../types';
 import { IEvents } from '../base/events';
 import { Model } from '../base/Model';
-import { LarekApi } from './LarekApi';
 
 export class AppStateModel extends Model implements IAppState {
-	productList: IProduct[];
-	productInfo: IProduct;
-
-	basket: IProduct[] = [];
+	productList: IProduct[] = []; // Список всех товаров
+	productInfo: IProduct; // Информация о конкретном товаре для предпросмотра
+	basket: string[] = []; // Список productId товаров в корзине
 	order: IOrder = {
 		items: [],
 		total: 0,
@@ -17,70 +15,89 @@ export class AppStateModel extends Model implements IAppState {
 		phone: '',
 	};
 
-	private api: LarekApi;
-
-	constructor(events: IEvents, api: LarekApi) {
+	constructor(events: IEvents) {
 		super(events);
-		this.api = api;
 	}
 
-	async loadProducts(): Promise<void> {
-		this.productList = await this.api.getProductList();
+	// Установка списка товаров и эмит события для обновления view
+	setProductList(products: IProduct[]): void {
+		this.productList = products;
 		this.emit('productsLoaded', this.productList);
 	}
 
-	async setProductInfo(productId: string): Promise<void> {
-		this.productInfo = await this.api.getProductItem(productId);
+	// Установка информации о выбранном товаре
+	setProductInfo(product: IProduct): void {
+		this.productInfo = product;
 		this.emit('productInfoUpdated', this.productInfo);
 	}
 
+	// Добавление товара в корзину по его productId
 	addToBasket(productId: string): void {
-		const product = this.productList.find((p) => p.id === productId);
-		if (product) {
-			this.basket.push(product);
-			this.emit('basketUpdated', this.basket);
+		if (!this.isProductInBasket(productId)) {
+			this.basket.push(productId);
+			this.emit('basketUpdated', this.getBasketProducts());
 		}
 	}
 
+	// Удаление товара из корзины по его productId
 	removeFromBasket(productId: string): void {
-		this.basket = this.basket.filter((item) => item.id !== productId);
-		this.emit('basketUpdated', this.basket);
+		this.basket = this.basket.filter((id) => id !== productId);
+		this.emit('basketUpdated', this.getBasketProducts());
 	}
 
+	// Очистка корзины
 	clearBasket(): void {
 		this.basket = [];
-		this.emit('basketUpdated', this.basket);
+		this.emit('basketUpdated', this.getBasketProducts());
 	}
 
+	// Получение количества товаров в корзине
 	getBasketCount(): number {
 		return this.basket.length;
 	}
 
+	// Подсчет общей стоимости товаров в корзине
 	getTotalBasketPrice(): number {
-		return this.basket.reduce((total, item) => total + (item.price || 0), 0);
+		return this.getBasketProducts().reduce(
+			(total, item) => total + (item.price || 0),
+			0
+		);
 	}
 
+	// Установка полей заказа
 	setOrderField(field: keyof IOrder, value: string): void {
 		(this.order as any)[field] = value;
 		this.emit('orderUpdated', this.order);
 	}
 
-	async submitOrder(): Promise<void> {
-		this.order.items = this.basket.map((item) => item.id);
-		this.order.total = this.getTotalBasketPrice();
-		const orderData = await this.api.createOrder(this.order);
-		console.log('Emitting orderSubmitted event', orderData);
-		this.emit('orderSubmitted', orderData);
-		this.clearBasket();
+	// Получение информации о товаре по его ID
+	getProductInfo(productId: string): IProduct | undefined {
+		return this.productList.find((product) => product.id === productId);
 	}
 
-	async getProductInfo(productId: string): Promise<IProduct> {
-		this.productInfo = await this.api.getProductItem(productId);
-		this.emit('productInfoUpdated', this.productInfo);
-		return this.productInfo;
-	}
-
+	// Проверка наличия товара в корзине по productId
 	isProductInBasket(productId: string): boolean {
-		return this.basket.some((item) => item.id === productId);
+		return this.basket.includes(productId);
+	}
+
+	// Установка текущего заказа на основе товаров в корзине
+	setOrder(): void {
+		this.order.items = this.basket;
+		this.order.total = this.getTotalBasketPrice();
+		this.emit('orderSet', this.order);
+	}
+
+	// Переключение состояния (добавить/удалить) товара в корзине
+	toggleBasketItem(productId: string): void {
+		this.isProductInBasket(productId)
+			? this.removeFromBasket(productId)
+			: this.addToBasket(productId);
+	}
+
+	// Вспомогательный метод для получения списка товаров в корзине
+	private getBasketProducts(): IProduct[] {
+		return this.basket
+			.map((id) => this.getProductInfo(id))
+			.filter((product): product is IProduct => !!product);
 	}
 }

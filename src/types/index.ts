@@ -1,4 +1,6 @@
 import { IEvents } from '../components/base/events';
+import { AppStateModel } from '../components/model/AppStateModel';
+import { LarekApi } from '../components/model/LarekApi';
 
 // Перечисление категорий товаров
 export type ICategory =
@@ -41,36 +43,35 @@ export interface ILarekApi {
 }
 
 export interface IAppState {
-	productList: IProduct[]; // Список товаров
-	productInfo: IProduct; // Информация о товаре (для инфо карточки)
-	basket: IProduct[]; // список товаров в корзине
-	order: IOrder; // Заказ
+	productList: IProduct[]; // Список всех товаров
+	productInfo: IProduct; // Информация о выбранном товаре для предпросмотра
+	basket: string[]; // Массив id товаров в корзине
+	order: IOrder; // Данные текущего заказа
 
-	// Действия с API
-	loadProducts(): Promise<void>;
-
-	// Методы управления состоянием
-
-	setProductInfo(productId: string): void;
-
-	addToBasket(productId: string): void; // Добавляем товар в корзину
-	removeFromBasket(productId: string): void; // Удаляем товар из корзины
-	clearBasket(): void; // Очищаем корзину
-	getBasketCount(): number; // Количество товаров в корзине
-	getTotalBasketPrice(): number; // Сумма всех товаров в корзине
-
-	setOrderField(field: keyof IOrder, value: string): void; // Заполяем поля формы заказа
-	submitOrder(): Promise<void>;
-	getProductInfo(productId: string): Promise<IProduct>;
-	isProductInBasket(productId: string): boolean;
+	// Методы управления состоянием:
+	setProductList(products: IProduct[]): void; // Устанавливает список товаров и эмитирует событие обновления
+	setProductInfo(product: IProduct): void; // Устанавливает информацию о выбранном товаре и эмитирует событие
+	addToBasket(productId: string): void; // Добавляет товар в корзину по его id
+	removeFromBasket(productId: string): void; // Удаляет товар из корзины по его id
+	clearBasket(): void; // Очищает корзину
+	getBasketCount(): number; // Возвращает количество товаров в корзине
+	getTotalBasketPrice(): number; // Возвращает общую стоимость товаров в корзине
+	setOrderField(field: keyof IOrder, value: string): void; // Устанавливает значение для поля заказа и эмитирует событие обновления
+	setOrder(): void; // Устанавливает текущий заказ на основе содержимого корзины
+	isProductInBasket(productId: string): boolean; // Проверяет наличие товара в корзине по его id
+	toggleBasketItem(productId: string): void; // Добавляет или удаляет товар из корзины по его id
+	getProductInfo(productId: string): IProduct | undefined; // Получает информацию о товаре по его id
 }
 
 /*
- * Интерфейс описывающий страницу
+ * Интерфейс описывающий главную страницу
  * */
 export interface IMainPage {
 	counter: number; // Счётчик товаров в корзине
 	catalog: HTMLElement[]; // Массив карточек с товарами
+
+	// Метод для рендеринга карточек товаров
+	render(products: IProduct[]): void;
 }
 
 /**
@@ -87,25 +88,30 @@ export interface IProductCard {
 	getElement(): HTMLElement; // Метод для получения DOM-элемента карточки
 }
 
+/**
+ * Интерфейс информационной карточки товара
+ */
+export interface IProductPreview {
+	// Методы
+	getElement(): HTMLElement;
+	renderProductData(product: IProduct, isInBasket: boolean): void;
+}
+
 /*
  * Интерфейс корзины товаров
  * */
 export interface IBasket {
-	items: IProduct[]; // Список товаров в корзине
-
-	render(): void; // Метод для отображения корзины
-	getElement(): HTMLElement; // Получить DOM-элемент корзины
+	render(basketItems: IProduct[]): void; // Метод для рендеринга товаров в корзине
+	getElement(): HTMLElement; // Метод для получения основного элемента корзины
 }
 
 /**
  * Интерфейс модального окна
  */
 export interface IModal {
-	// content: HTMLElement; // Содержимое модального окна
-
-	setContent(content: HTMLElement): void;
-	open(): void;
-	close(): void;
+	setContent(content: HTMLElement): void; // Устанавливает содержимое модального окна.
+	open(): void; // Открывает модальное окно.
+	close(): void; // Закрывает модальное окно.
 }
 
 /**
@@ -135,23 +141,40 @@ export interface ISuccess {
 }
 
 /**
- * Интерфейс контроллера
+ * Интерфейс Презентера
  */
-export interface IMainController {
-	// Свойства
+export interface IMainPresenter {
 	events: IEvents;
-	model: IAppState;
+	model: AppStateModel;
+	api: LarekApi;
 	modal: IModal;
 
-	// Методы
+	/**
+	 * Метод для связывания событий с обработчиками Презентера
+	 */
 	bindEvents(): void;
+	/**
+	 * Загружает список продуктов из API и обновляет модель
+	 */
+	loadProducts(): Promise<void>;
+	/**
+	 * Открывает форму для ввода адреса и способа оплаты
+	 */
 	handleCheckout(): void;
+	/**
+	 * Открывает форму для ввода контактной информации
+	 */
 	openContactsForm(): void;
+	/**
+	 * Отправляет заказ в API, обновляет состояние и уведомляет об успешном оформлении заказа
+	 */
 	submitOrder(): Promise<void>;
+	/**
+	 * Показывает сообщение об успешном оформлении заказа
+	 */
 	showSuccess(total: number): void;
-}
-
-export interface IProductPreview {
-	// Методы
-	getElement(): HTMLElement;
+	/**
+	 * Отображает информацию о товаре в модальном окне
+	 */
+	showProductPreview(product: IProduct): void;
 }

@@ -11,9 +11,7 @@ export abstract class BaseView implements IBaseView {
 	constructor(events: IEvents, rootElement: HTMLElement) {
 		this.events = events;
 		this.rootElement = rootElement;
-		this.bindEvents();
 	}
 
-	protected abstract bindEvents(): void;
 	public abstract render(data?: any): void;
 }

@@ -11,11 +11,11 @@
 - [Модели данных (Model)](#модели-данных-model)
 - [Специальные компоненты](#специальные-компоненты)
 - [Отображения (View)](#отображения-view)
-- [Контроллеры (Presenters)](#контроллеры-presenters)
+- [Презентер (Presenters)](#презентер-presenters)
 - [Связь между слоями Model и View через Presenter](#связь-между-слоями-model-и-view-через-presenter)
   - [Как осуществляется связь](#как-осуществляется-связь)
-  - [Конкретные пользовательские события](#конкретные-пользовательские-события)
-  - [Пример взаимодействия](#пример-взаимодействия)
+  - [Конкретные пользовательские события и их обработка](#конкретные-пользовательские-события-и-их-обработка)
+  - [Пример полного сценария взаимодействия между слоями](#пример-полного-сценария-взаимодействия-между-слоями)
 
 ## Стек
 
@@ -91,16 +91,29 @@ yarn build
 
 Проект реализован с использованием архитектурного паттерна MVP (Model-View-Presenter), обеспечивающего четкое разделение ответственностей между слоями приложения:
 
-- Model — управление данными приложения, взаимодействие с API и хранение состояния.
-- View — отображение данных и взаимодействие с пользователем.
-- Presenter — посредник между Model и View, обрабатывает бизнес-логику и события.
+`Model (Модель)`:
+
+- В проекте роль модели выполняет AppStateModel, который управляет состоянием приложения и содержит бизнес-логику.
+- Модель отвечает за обработку данных, их хранение и управление ими (добавление/удаление из корзины, получение данных от LarekApi и т.д.).
+- Она сама не взаимодействует напрямую с представлением, а только оповещает об изменениях через EventEmitter.
+
+`View (Представление)`:
+
+- Представления (MainPage, ProductCard, Basket, Modal и другие классы) отображают данные и принимают пользовательские действия. Каждое представление отвеч-ает за отображение и реакцию на действия в рамках своей области ответственности, не зная деталей работы модели.
+- View также обрабатывает клики и другие события, передавая действия через EventEmitter.
+
+`Presenter (Презентер)`:
+
+- MainPresenter выступает в роли посредника между Model и View, принимая на себя связь между ними.
+- Презентер обрабатывает пользовательские события и запросы от представлений, при необходимости запрашивает данные у модели и затем передает их в представления для отображения.
+- В данном случае MainPresenter реализует логику перехода между состояниями представления (например, показ модальных окон для корзины или информации о товаре), следя за тем, чтобы View и Model оставались независимыми друг от друга.
 
 ### Основные части архитектуры
 
 - Базовые классы (Base): Предоставляют общие функциональности для других компонентов.
 - Модели данных (Model): Управляют данными и бизнес-логикой приложения.
 - Отображения (View): Отвечают за пользовательский интерфейс и взаимодействие с пользователем.
-- Контроллеры (Presenter): Связывают модели и отображения, обрабатывают события и управляют потоком данных.
+- Презентер (Presenter): Связывают модели и отображения, обрабатывают события и управляют потоком данных.
 
 ### Взаимодействие компонентов
 
@@ -156,26 +169,25 @@ yarn build
 
 Атрибуты:
 
-- productList: IProduct[] — список товаров.
-- productInfo: IProduct — информация о текущем выбранном товаре.
-- basket: IProduct[] — список товаров в корзине.
-- order: IOrder — данные текущего заказа.
-- private api: LarekApi — экземпляр LarekApi для взаимодействия с API.
+- productList: IProduct[] — массив, содержащий список всех товаров.
+- productInfo: IProduct — объект, содержащий данные о выбранном пользователем товаре для предпросмотра.
+- basket: string[] — массив productId, представляющих товары в корзине.
+- order: IOrder — объект с данными заказа, включая элементы, стоимость и контактную информацию.
 
 Методы:
 
-- constructor(events: IEvents, api: LarekApi) — инициализирует модель с экземпляром EventEmitter и LarekApi.
-- async loadProducts(): Promise<void> — загружает список товаров с API.
-- async setProductInfo(productId: string): Promise<void> — устанавливает информацию о текущем товаре.
+- constructor(events: IEvents) — инициализирует модель и связывает события.
+- setProductList(products: IProduct[]): void — сохраняет список товаров и эмитирует событие productsLoaded.
+- setProductInfo(product: IProduct): void — устанавливает выбранный товар для предпросмотра.
 - addToBasket(productId: string): void — добавляет товар в корзину.
 - removeFromBasket(productId: string): void — удаляет товар из корзины.
 - clearBasket(): void — очищает корзину.
 - getBasketCount(): number — возвращает количество товаров в корзине.
 - getTotalBasketPrice(): number — возвращает общую стоимость товаров в корзине.
-- setOrderField(field: keyof IOrder, value: string): void — устанавливает значение поля заказа.
-- async submitOrder(): Promise<void> — отправляет заказ на сервер.
-- async getProductInfo(productId: string): Promise<IProduct> — получает информацию о товаре.
-- isProductInBasket(productId: string): boolean — проверяет, есть ли товар в корзине.
+- setOrderField(field: keyof IOrder, value: string): void — задает поле для заказа.
+- setOrder(): void — инициализирует текущий заказ на основе содержимого корзины.
+- toggleBasketItem(productId: string): void — переключает наличие товара в корзине.
+- getBasketProducts(): IProduct[] — возвращает список объектов IProduct для корзины на основе productId.
 
 ## Специальные компоненты
 
@@ -217,7 +229,6 @@ yarn build
 Методы:
 
 - constructor(events: IEvents, rootElement: HTMLElement) — инициализирует представление с EventEmitter и корневым элементом.
-- protected abstract bindEvents(): void — абстрактный метод для привязки событий, реализуется в подклассах.
 - public abstract render(data?: any): void — абстрактный метод для рендеринга данных, реализуется в подклассах.
 
 ### Глобальные компоненты
@@ -237,7 +248,6 @@ yarn build
 Методы:
 
 - constructor(events: IEvents, rootElement: HTMLElement) — инициализирует главную страницу с EventEmitter и корневым элементом.
-- protected bindEvents(): void — привязывает события загрузки товаров и обновления корзины.
 - public render(products: IProduct[]): void — рендерит список товаров на странице.
 
 ### Класс `ProductCard`
@@ -263,18 +273,18 @@ yarn build
 Атрибуты:
 
 - private element: HTMLElement — DOM-элемент предпросмотра товара.
-- private product: IProduct — данные товара.
-- private events: IEvents — экземпляр EventEmitter.
-- private model: AppStateModel — модель состояния приложения для доступа к корзине.
+- private productId: string — id текущего товара, сохраняется для передачи в событие добавления/удаления из корзины.
+- private events: IEvents — экземпляр EventEmitter для обработки событий.
 - private addButton: HTMLButtonElement — кнопка для добавления/удаления товара из корзины.
 
 Методы:
 
 - constructor(product: IProduct, events: IEvents, model: AppStateModel) — инициализирует предпросмотр товара.
 - private init(): void — инициализирует элементы и привязывает обработчики событий.
-- private updateButtonLabel(): void — обновляет текст кнопки в зависимости от состояния корзины.
-- private handleButtonClick(): void — обрабатывает клики по кнопке добавления/удаления из корзины.
-- public getElement(): HTMLElement — возвращает DOM-элемент предпросмотра.
+- public renderProductData(product: IProduct, isInBasket: boolean): void — отображает информацию о товаре, обновляет текстовые и графические данные карточки, а также изменяет состояние кнопки в зависимости от того, находится ли товар в корзине.
+- private updateButtonLabel(isInBasket = false): void — обновляет текст кнопки добавления/удаления товара на основе его наличия в корзине.
+- private handleButtonClick(): void — обрабатывает событие клика на кнопку добавления/удаления товара из корзины и отправляет событие toggleBasketItem с ID товара. Также инициирует закрытие модального окна после нажатия.
+- public getElement(): HTMLElement — возвращает корневой DOM-элемент предпросмотра товара для отображения в модальном окне.
 
 ### Класс `Basket`
 
@@ -282,20 +292,19 @@ yarn build
 
 Атрибуты:
 
-- public items: IProduct[] — список товаров в корзине.
-- private basketElement: HTMLElement — DOM-элемент корзины.
+- private basketElement: HTMLElement — корневой DOM-элемент корзины.
 - private basketList: HTMLElement — элемент списка товаров в корзине.
-- private totalPriceElement: HTMLElement — элемент отображения общей стоимости.
-- private checkoutButton: HTMLButtonElement — кнопка для оформления заказа.
-- private events: IEvents — экземпляр EventEmitter.
+- private totalPriceElement: HTMLElement — элемент, отображающий общую стоимость корзины.
+- private checkoutButton: HTMLButtonElement — кнопка для перехода к оформлению заказа.
+- private events: IEvents — экземпляр EventEmitter для обработки событий корзины.
 
 Методы:
 
-- constructor(events: IEvents) — инициализирует корзину.
-- private bindEvents(): void — привязывает обработчики событий.
-- public render(): void — отображает товары в корзине.
-- private createBasketItem(product: IProduct, index: number): HTMLElement — создает элемент товара в корзине.
-- public getElement(): HTMLElement — возвращает DOM-элемент корзины.
+- constructor(events: IEvents) — инициализирует корзину, связывая ее с экземпляром EventEmitter для прослушивания и обработки событий.
+- private bindEvents(): void — привязывает события, такие как клик по кнопке оформления и обновления корзины.
+- public render(basketItems: IProduct[]): void — рендерит товары в корзине, обновляя список товаров и общую стоимость на основе переданных данных.
+- private createBasketItem(product: IProduct, index: number): HTMLElement — создает DOM-элемент для каждого товара в корзине с его названием, ценой и кнопкой для удаления.
+- public getElement(): HTMLElement — возвращает корневой элемент корзины для размещения на странице.
 
 ### Класс `OrderAdress`
 
@@ -356,117 +365,182 @@ yarn build
 
 ### Класс `Modal`
 
-Предназначение: Управляет отображением модальных окон.
+Управление модальным окном, включая его отображение, скрытие и обновление содержимого. Он также управляет прокруткой фона при открытии/закрытии.
 
 Функции:
 
 - Открытие и закрытие модальных окон.
 - Управление содержимым модального окна.
 - Обработка событий внутри модального окна.
+- Управление прокруткой фона.
 
 Атрибуты:
 
 - private modalElement: HTMLElement — корневой элемент модального окна.
-- private modalContainer: HTMLElement — контейнер содержимого модального окна.
-- private modalContent: HTMLElement — элемент для размещения содержимого.
-- private closeButton: HTMLElement — кнопка закрытия модального окна.
+- private modalContainer: HTMLElement — контейнер для содержимого модального окна.
+- private modalContent: HTMLElement — элемент для добавления содержимого.
+- private closeButton: HTMLElement — кнопка для закрытия окна.
+- private wrapper: HTMLElement — элемент фона (страницы) для блокировки прокрутки.
 
 Методы:
 
-- constructor() — инициализирует модальное окно и привязывает события.
-- private bindEvents(): void — привязывает обработчики событий для закрытия окна.
-- public setContent(content: HTMLElement): void — устанавливает содержимое модального окна.
-- public open(): void — открывает модальное окно.
-- public close(): void — закрывает модальное окно.
+- constructor() — инициализирует модальное окно, элементы и события.
+- private bindEvents() — добавляет обработчики закрытия модального окна.
+- public setContent(content: HTMLElement) — заменяет содержимое модального окна новым содержимым.
+- public open() — открывает окно и блокирует прокрутку фона.
+- public close() — закрывает окно и разблокирует прокрутку фона.
 
-## Контроллеры (Presenters)
+## Презентер (Presenters)
 
-### `MainController`
+### `MainPresenter`
 
-Класс `MainController` выступает в роли презентера и связывает пользовательские действия с моделью `AppStateModel`. Он обрабатывает события от представлений и вызывает соответствующие методы модели.
+Класс `MainPresenter` выступает в роли презентера и связывает пользовательские действия с моделью `AppStateModel`. Он обрабатывает события от представлений и вызывает соответствующие методы модели.
 
 Атрибуты:
 
-- public events: IEvents — экземпляр EventEmitter.
-- public model: AppStateModel — модель состояния приложения.
-- public modal: Modal — экземпляр класса Modal для управления модальными окнами.
+- public events: IEvents — экземпляр EventEmitter для обмена событиями между компонентами.
+- public model: AppStateModel — модель состояния приложения, хранящая информацию о товарах, корзине и заказах.
+- public api: LarekApi — экземпляр API-клиента для взаимодействия с сервером.
+- public modal: Modal — экземпляр Modal для управления модальными окнами.
 
 Методы:
 
-- constructor(events: IEvents, model: AppStateModel, modal: Modal) — инициализирует контроллер с EventEmitter, моделью и модальным окном.
-- public bindEvents(): void — привязывает обработчики событий от представлений.
-- public handleCheckout(): void — обрабатывает начало оформления заказа, открывая форму OrderAddress.
-- public openContactsForm(): void — открывает форму ввода контактных данных OrderContacts.
-- public async submitOrder(): Promise<void> — отправляет заказ и обрабатывает ответ.
-- public showSuccess(total: number): void — отображает сообщение об успешном заказе.
-- public showProductPreview(product: IProduct): void — отображает предпросмотр товара в модальном окне.
+- constructor(events: IEvents, model: AppStateModel, api: LarekApi, modal: Modal) — инициализирует объект презентера, связывая его с событиями, моделью, API и модальным окном.
+- public bindEvents(): void — регистрирует обработчики событий интерфейса, включая добавление и удаление товара из корзины, оформление заказа и показ модальных окон для ввода информации.
+- public async loadProducts(): Promise<void> — загружает список продуктов через API и обновляет модель с их данными.
+- public handleCheckout(): void — инициирует процесс оформления заказа, открывая форму для ввода адреса и способа оплаты.
+- public openContactsForm(): void — открывает форму для ввода контактной информации (телефон и email).
+- public async submitOrder(): Promise<void> — отправляет заказ через API, обновляет модель, очищает корзину и уведомляет об успешном оформлении заказа.
+- public showSuccess(total: number): void — отображает сообщение об успешном оформлении заказа, указывая итоговую сумму.
+- public showProductPreview(product: IProduct): void — открывает предпросмотр товара в модальном окне и позволяет добавить/удалить его из корзины.
 
 Обработка событий в bindEvents():
 
-- `addToBasket` — добавление товара в корзину.
-- `removeFromBasket` — удаление товара из корзины.
-- `checkout` — начало оформления заказа.
-- `orderAddressSubmitted` — получение данных адреса и оплаты.
-- `orderContactsSubmitted` — получение контактной информации.
-- `orderSubmitted` — заказ успешно отправлен.
-- `openProductInfo` — открытие предпросмотра товара.
+- `toggleBasketItem` — добавляет или удаляет товар из корзины на основе его текущего состояния.
+- `checkout` — открывает окно оформления заказа.
+- `orderAddressSubmitted` — обрабатывает отправку данных адреса и метода оплаты.
+- `orderContactsSubmitted` — обрабатывает ввод контактных данных клиента.
+- `orderSubmitted` — обрабатывает успешное завершение заказа.
+- `openProductInfo` — открывает окно предпросмотра товара.
+- `closeModal` — закрывает модальное окно.
 
 ## Связь между слоями Model и View через Presenter
 
-### Как осуществляется связь:
+### Как осуществляется связь
 
-- EventEmitter: Используется для обмена сообщениями между компонентами. `View` эмитирует события пользовательских действий, на которые подписывается `Presenter`.
-- Presenter: `MainController` подписывается на события от `View` и вызывает соответствующие методы модели `AppStateModel`. Он также обновляет `View`, вызывая методы для отображения изменений.
-- Модель: После изменения состояния модель может эмитировать события, на которые подписываются `View` или `Presenter` для обновления отображения.
+1. EventEmitter используется для обмена событиями между слоями View, Model и Presenter.
 
-### Конкретные пользовательские события:
+- View эмитирует события пользовательских действий (например, нажатия кнопок), которые подписываются в Presenter.
+- Model эмитирует события об изменениях данных (например, обновление корзины), на которые подписываются Presenter и View.
+
+2. Presenter (в данном случае MainPresenter):
+
+- Подписывается на события от View, обрабатывает их, вызывает соответствующие методы в Model.
+- Слушает изменения состояния от Model, обновляя View с помощью вызова методов для рендеринга или обновления данных.
+
+3. Model:
+
+- Изменяет состояние данных в ответ на действия от Presenter.
+- Эмитирует события, чтобы уведомить View о необходимости обновить отображение.
+
+### Конкретные пользовательские события и их обработка:
 
 #### Клики по элементам интерфейса:
 
-- Клик на товар в каталоге (`openProductInfo`).
-- Клик на кнопку "В корзину" или "Удалить из корзины" (`addToBasket`, `removeFromBasket`).
-- Клик на кнопку корзины в шапке сайта (открытие корзины).
-- Клик на кнопку "Оформить" в корзине (`checkout`).
+- Клик на товар в каталоге (`openProductInfo`):
+
+  1. View (через ProductCard) эмитирует openProductInfo с productId.
+  2. Presenter подписывается на openProductInfo, получает данные товара из Model и вызывает showProductPreview.
+
+- Клик на кнопку "В корзину" или "Удалить из корзины" (`toggleBasketItem`):
+
+  1. View (ProductPreview) эмитирует событие toggleBasketItem.
+  2. Presenter подписывается на toggleBasketItem и вызывает toggleBasketItem в Model для добавления или удаления товара.
+  3. Model обновляет корзину и эмитирует basketUpdated.
+  4. View (Basket, MainPage) подписывается на basketUpdated и обновляет отображение корзины и счётчика.
+
+- Клик на кнопку корзины в шапке сайта (открытие корзины):
+
+  1. View: При клике открывается корзина с помощью Modal, отображая содержимое, полученное от Basket.
+
+- Клик на кнопку "Оформить" (`checkout`):
+
+  1. View: Эмитирует checkout, который инициирует отображение формы с адресом и способом оплаты через Presenter.
 
 #### Отправка форм:
 
-- Отправка формы выбора способа оплаты и адреса (`orderAddressSubmitted`).
-- Отправка формы контактных данных (`orderContactsSubmitted`).
+- Отправка формы выбора способа оплаты и адреса (`orderAddressSubmitted`):
+
+  1. View (OrderAddress): Эмитирует orderAddressSubmitted с данными формы.
+  2. Presenter подписывается на orderAddressSubmitted и вызывает openContactsForm для отображения следующей формы.
+
+- Отправка формы контактных данных (`orderContactsSubmitted`):
+
+  1. View (OrderContacts): Эмитирует orderContactsSubmitted.
+  2. Presenter подписывается на orderContactsSubmitted и вызывает submitOrder для отправки заказа.
 
 #### Обновления состояния:
 
-- Обновление корзины (`basketUpdated`).
-- Загрузка списка товаров (`productsLoaded`).
-- Оформление заказа (`orderSubmitted`).
+- Обновление корзины (`basketUpdated`):
 
-### Пример взаимодействия:
+  1. Model: После изменения корзины эмитирует basketUpdated.
+  2. View (Basket, MainPage): Подписаны на basketUpdated для обновления корзины и счётчика.
+
+- Загрузка списка товаров (`productsLoaded`):
+
+  1. Model загружает данные о товарах, затем эмитирует productsLoaded.
+  2. View (MainPage) подписывается на productsLoaded и вызывает render.
+
+- Оформление заказа (`orderSubmitted`):
+
+  1. Model отправляет данные заказа через API, после успешного ответа от сервера эмитирует orderSubmitted.
+  2. View (Success) показывает сообщение об успешном оформлении заказа.
+
+### Пример полного сценария взаимодействия между слоями:
 
 1. Пользователь нажимает на карточку товара в каталоге.
 
-- View (ProductCard): Эмитирует событие `openProductInfo` с productId.
+- View (ProductCard): Эмитирует событие openProductInfo с productId.
+- Presenter (MainPresenter):
+  - Подписывается на openProductInfo.
+  - Получает данные товара из model.getProductInfo(productId).
+  - Вызывает showProductPreview для отображения модального окна с предпросмотром товара.
 
-2. Presenter (MainController):
+2. Пользователь нажимает кнопку "В корзину" в предпросмотре товара.
 
-- Подписан на событие `openProductInfo`.
-- Вызывает `model.getProductInfo(productId)` для получения данных товара.
-- Вызывает `showProductPreview(product)` для отображения предпросмотра.
+- View (ProductPreview) эмитирует toggleBasketItem.
+- Presenter:
+  - Подписан на событие toggleBasketItem.
+  - Вызывает model.toggleBasketItem(productId) для добавления товара в корзину.
+- Model:
+  - Обновляет состояние корзины.
+  - Эмитирует basketUpdated для уведомления о том, что корзина обновилась.
+- View (Basket, MainPage):
+  - Подписаны на basketUpdated.
+  - Обновляют отображение корзины и счётчика.
 
-3. Пользователь нажимает кнопку "В корзину" в предпросмотре товара.
+3. Пользователь кликает на кнопку "Оформить" в корзине.
 
-- View (ProductPreview): Эмитирует событие `addToBasket` с productId.
-- Закрывает модальное окно, эмитируя `closeModal`.
+- View: Эмитирует событие checkout.
+- Presenter:
+  - Подписан на checkout.
+  - Вызывает handleCheckout для отображения формы с адресом и оплатой.
 
-4. Presenter (MainController):
+4. Пользователь заполняет форму адреса и нажимает "Далее".
 
-- Подписан на событие `addToBasket`.
-- Вызывает `model.addToBasket(productId)` для добавления товара в корзину.
+- View (OrderAddress): Эмитирует orderAddressSubmitted с payment и address.
+- Presenter:
+  - Подписан на orderAddressSubmitted.
+  - Вызывает openContactsForm для отображения следующей формы с контактными данными.
 
-5. Model (AppStateModel):
+5. Пользователь заполняет контактные данные и нажимает "Отправить заказ".
 
-- Обновляет состояние корзины.
-- Эмитирует событие `basketUpdated`.
-
-6. View (Basket, MainPage):
-
-- Подписаны на событие `basketUpdated`.
-- Обновляют отображение корзины и счетчика товаров.
+- View (OrderContacts) эмитирует orderContactsSubmitted с email и phone.
+- Presenter:
+  - Подписан на orderContactsSubmitted.
+  - Вызывает submitOrder для отправки заказа.
+- Model:
+  - Обрабатывает заказ и отправляет данные на сервер.
+  - После успешного ответа эмитирует orderSubmitted.
+- View (Success):
+  - Подписан на orderSubmitted и отображает сообщение об успешном заказе.

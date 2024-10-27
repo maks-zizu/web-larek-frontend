@@ -37,7 +37,10 @@ export class ProductCard implements IProductCard {
 		titleElement.textContent = this.product.title;
 		categoryElement.textContent = this.product.category;
 		imageElement.src = this.product.image;
-		priceElement.textContent = `${this.product.price} синапсов`;
+		priceElement.textContent =
+			this.product.price === null
+				? 'Бесценно'
+				: `${this.product.price} синапсов`;
 
 		// Обработчик клика по карточке для открытия информации о продукте
 		this.element.addEventListener('click', (event) => {

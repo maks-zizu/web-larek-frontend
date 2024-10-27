@@ -15,20 +15,11 @@ export class MainPage extends BaseView implements IMainPage {
 		this.galleryElement = ensureElement('.gallery', this.rootElement);
 	}
 
-	protected bindEvents(): void {
-		// Слушаем событие загрузки товаров
-		this.events.on<IProduct[]>('productsLoaded', (products: IProduct[]) => {
-			this.render(products);
-		});
-
-		// Слушаем обновление корзины для обновления счетчика
-		this.events.on('basketUpdated', (basket: IProduct[]) => {
-			this.counter = basket.length;
-		});
-	}
-
+	/**
+	 * Метод для рендеринга карточек товаров
+	 */
 	public render(products: IProduct[]): void {
-		// Очищаем галерею
+		// Очищаем галерею перед рендером
 		this.galleryElement.innerHTML = '';
 		this.catalog = []; // Очищаем массив карточек
 
@@ -36,7 +27,7 @@ export class MainPage extends BaseView implements IMainPage {
 		products.forEach((product) => {
 			const productCard = new ProductCard(product, this.events);
 			this.catalog.push(productCard.getElement()); // Добавляем элемент в массив
-			this.galleryElement.appendChild(productCard.getElement());
+			this.galleryElement.appendChild(productCard.getElement()); // Добавляем в DOM
 		});
 	}
 }

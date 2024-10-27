@@ -3,8 +3,6 @@ import { IEvents } from '../base/events';
 import { cloneTemplate, ensureElement } from '../../utils/utils';
 
 export class Basket implements IBasket {
-	public items: IProduct[] = []; // Список товаров в корзине
-
 	private basketElement: HTMLElement;
 	private basketList: HTMLElement;
 	private totalPriceElement: HTMLElement;
@@ -38,31 +36,36 @@ export class Basket implements IBasket {
 			this.events.emit('checkout');
 		});
 
-		// Слушаем обновление корзины
-		this.events.on<IProduct[]>('basketUpdated', (basket) => {
-			this.items = basket;
-			this.render();
+		// Слушаем обновление корзины и вызываем render для обновления представления
+		this.events.on<IProduct[]>('basketUpdated', (basketItems) => {
+			this.render(basketItems);
 		});
 	}
 
-	public render() {
+	/**
+	 * Метод рендеринга элементов корзины на основе полученных данных о продуктах.
+	 */
+	public render(basketItems: IProduct[]): void {
 		// Очищаем список товаров в корзине
 		this.basketList.innerHTML = '';
 
-		// Добавляем товары в корзину
-		this.items.forEach((product, index) => {
+		// Добавляем каждый товар в корзину
+		basketItems.forEach((product, index) => {
 			const basketItem = this.createBasketItem(product, index + 1);
 			this.basketList.appendChild(basketItem);
 		});
 
 		// Обновляем общую стоимость
-		const totalPrice = this.items.reduce(
+		const totalPrice = basketItems.reduce(
 			(total, item) => total + (item.price || 0),
 			0
 		);
 		this.totalPriceElement.textContent = `${totalPrice} синапсов`;
 	}
 
+	/**
+	 * Создает и возвращает DOM-элемент для товара в корзине.
+	 */
 	private createBasketItem(product: IProduct, index: number): HTMLElement {
 		const template = document.getElementById(
 			'card-basket'
@@ -79,15 +82,20 @@ export class Basket implements IBasket {
 		indexElement.textContent = index.toString();
 		titleElement.textContent = product.title;
 		priceElement.textContent = `${product.price} синапсов`;
+		priceElement.textContent =
+			product.price === null ? 'Бесценно' : `${product.price} синапсов`;
 
 		// Обработчик удаления товара из корзины
 		deleteButton.addEventListener('click', () => {
-			this.events.emit('removeFromBasket', { productId: product.id });
+			this.events.emit('toggleBasketItem', { productId: product.id });
 		});
 
 		return itemElement;
 	}
 
+	/**
+	 * Возвращает основной элемент корзины
+	 */
 	public getElement(): HTMLElement {
 		return this.basketElement;
 	}

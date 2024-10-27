@@ -1,19 +1,15 @@
 import { IProduct, IProductPreview } from '../../types/index';
 import { IEvents } from '../base/events';
 import { ensureElement } from '../../utils/utils';
-import { AppStateModel } from '../model/AppStateModel';
 
 export class ProductPreview implements IProductPreview {
-	private element: HTMLElement;
-	private product: IProduct;
 	private events: IEvents;
-	private model: AppStateModel;
+	private element: HTMLElement;
 	private addButton: HTMLButtonElement;
+	private productId: string;
 
-	constructor(product: IProduct, events: IEvents, model: AppStateModel) {
-		this.product = product;
+	constructor(events: IEvents) {
 		this.events = events;
-		this.model = model;
 
 		// Клонируем шаблон карточки предпросмотра
 		const template = document.getElementById(
@@ -23,37 +19,17 @@ export class ProductPreview implements IProductPreview {
 			true
 		) as HTMLElement;
 
-		// Инициализируем карточку
+		// Находим и инициализируем кнопки и слушатели событий
 		this.init();
 	}
 
 	private init(): void {
-		// Находим элементы карточки
-		const titleElement = ensureElement('.card__title', this.element);
-		const categoryElement = ensureElement('.card__category', this.element);
-		const imageElement = ensureElement(
-			'.card__image',
-			this.element
-		) as HTMLImageElement;
-		const priceElement = ensureElement('.card__price', this.element);
-		const descriptionElement = ensureElement('.card__text', this.element);
 		this.addButton = ensureElement(
 			'.card__button',
 			this.element
 		) as HTMLButtonElement;
 
-		// Устанавливаем данные товара
-		titleElement.textContent = this.product.title;
-		categoryElement.textContent = this.product.category;
-		imageElement.src = this.product.image;
-		imageElement.alt = this.product.title;
-		priceElement.textContent = `${this.product.price} синапсов`;
-		descriptionElement.textContent = this.product.description;
-
-		// Устанавливаем текст кнопки на основе состояния корзины
-		this.updateButtonLabel();
-
-		// Обработчик клика по кнопке
+		// Обработчик клика по кнопке добавления/удаления товара
 		this.addButton.addEventListener('click', () => {
 			this.handleButtonClick();
 		});
@@ -64,27 +40,43 @@ export class ProductPreview implements IProductPreview {
 		});
 	}
 
-	private updateButtonLabel(): void {
-		const isInBasket = this.model.isProductInBasket(this.product.id);
+	/**
+	 * Метод для отображения данных о товаре в DOM элементах карточки
+	 */
+	public renderProductData(product: IProduct, isInBasket: boolean): void {
+		this.productId = product.id; // Сохраняем ID товара для использования в handleButtonClick
 
-		if (isInBasket) {
-			this.addButton.textContent = 'Удалить из корзины';
-		} else {
-			this.addButton.textContent = 'В корзину';
-		}
+		// Находим элементы карточки и заполняем их данными о товаре
+		const titleElement = ensureElement('.card__title', this.element);
+		const categoryElement = ensureElement('.card__category', this.element);
+		const imageElement = ensureElement(
+			'.card__image',
+			this.element
+		) as HTMLImageElement;
+		const priceElement = ensureElement('.card__price', this.element);
+		const descriptionElement = ensureElement('.card__text', this.element);
+
+		titleElement.textContent = product.title;
+		categoryElement.textContent = product.category;
+		imageElement.src = product.image;
+		imageElement.alt = product.title;
+		priceElement.textContent =
+			product.price === null ? 'Бесценно' : `${product.price} синапсов`;
+		descriptionElement.textContent = product.description;
+
+		// Устанавливаем текст кнопки на основе состояния корзины
+		this.updateButtonLabel(isInBasket);
+	}
+
+	private updateButtonLabel(isInBasket = false): void {
+		this.addButton.textContent = isInBasket
+			? 'Удалить из корзины'
+			: 'В корзину';
 	}
 
 	private handleButtonClick(): void {
-		const isInBasket = this.model.isProductInBasket(this.product.id);
-
-		if (isInBasket) {
-			// Удаляем из корзины
-			this.events.emit('removeFromBasket', { productId: this.product.id });
-		} else {
-			// Добавляем в корзину
-			this.events.emit('addToBasket', { productId: this.product.id });
-		}
-
+		// Инициируем событие для добавления или удаления товара из корзины
+		this.events.emit('toggleBasketItem', { productId: this.productId });
 		// Закрываем модальное окно
 		this.events.emit('closeModal');
 	}
