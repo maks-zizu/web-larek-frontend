@@ -449,52 +449,52 @@ yarn build
 
 - Клик на товар в каталоге (`openProductInfo`):
 
-  1. View (через ProductCard) эмитирует openProductInfo с productId.
-  2. Presenter подписывается на openProductInfo, получает данные товара из Model и вызывает showProductPreview.
+  - View (через ProductCard) эмитирует openProductInfo с productId.
+  - Presenter подписывается на openProductInfo, получает данные товара из Model и вызывает showProductPreview.
 
 - Клик на кнопку "В корзину" или "Удалить из корзины" (`toggleBasketItem`):
 
-  1. View (ProductPreview) эмитирует событие toggleBasketItem.
-  2. Presenter подписывается на toggleBasketItem и вызывает toggleBasketItem в Model для добавления или удаления товара.
-  3. Model обновляет корзину и эмитирует basketUpdated.
-  4. View (Basket, MainPage) подписывается на basketUpdated и обновляет отображение корзины и счётчика.
+  - View (ProductPreview) эмитирует событие toggleBasketItem.
+  - Presenter подписывается на toggleBasketItem и вызывает toggleBasketItem в Model для добавления или удаления товара.
+  - Model обновляет корзину и эмитирует basketUpdated.
+  - View (Basket, MainPage) подписывается на basketUpdated и обновляет отображение корзины и счётчика.
 
 - Клик на кнопку корзины в шапке сайта (открытие корзины):
 
-  1. View: При клике открывается корзина с помощью Modal, отображая содержимое, полученное от Basket.
+  - View: При клике открывается корзина с помощью Modal, отображая содержимое, полученное от Basket.
 
 - Клик на кнопку "Оформить" (`checkout`):
 
-  1. View: Эмитирует checkout, который инициирует отображение формы с адресом и способом оплаты через Presenter.
+  - View: Эмитирует checkout, который инициирует отображение формы с адресом и способом оплаты через Presenter.
 
 #### Отправка форм:
 
 - Отправка формы выбора способа оплаты и адреса (`orderAddressSubmitted`):
 
-  1. View (OrderAddress): Эмитирует orderAddressSubmitted с данными формы.
-  2. Presenter подписывается на orderAddressSubmitted и вызывает openContactsForm для отображения следующей формы.
+  - View (OrderAddress): Эмитирует orderAddressSubmitted с данными формы.
+  - Presenter подписывается на orderAddressSubmitted и вызывает openContactsForm для отображения следующей формы.
 
 - Отправка формы контактных данных (`orderContactsSubmitted`):
 
-  1. View (OrderContacts): Эмитирует orderContactsSubmitted.
-  2. Presenter подписывается на orderContactsSubmitted и вызывает submitOrder для отправки заказа.
+  - View (OrderContacts): Эмитирует orderContactsSubmitted.
+  - Presenter подписывается на orderContactsSubmitted и вызывает submitOrder для отправки заказа.
 
 #### Обновления состояния:
 
 - Обновление корзины (`basketUpdated`):
 
-  1. Model: После изменения корзины эмитирует basketUpdated.
-  2. View (Basket, MainPage): Подписаны на basketUpdated для обновления корзины и счётчика.
+  - Model: После изменения корзины эмитирует basketUpdated.
+  - View (Basket, MainPage): Подписаны на basketUpdated для обновления корзины и счётчика.
 
 - Загрузка списка товаров (`productsLoaded`):
 
-  1. Model загружает данные о товарах, затем эмитирует productsLoaded.
-  2. View (MainPage) подписывается на productsLoaded и вызывает render.
+  - Model загружает данные о товарах, затем эмитирует productsLoaded.
+  - View (MainPage) подписывается на productsLoaded и вызывает render.
 
 - Оформление заказа (`orderSubmitted`):
 
-  1. Model отправляет данные заказа через API, после успешного ответа от сервера эмитирует orderSubmitted.
-  2. View (Success) показывает сообщение об успешном оформлении заказа.
+  - Model отправляет данные заказа через API, после успешного ответа от сервера эмитирует orderSubmitted.
+  - View (Success) показывает сообщение об успешном оформлении заказа.
 
 ### Пример полного сценария взаимодействия между слоями:
 
