@@ -8,6 +8,8 @@ import { Basket } from './components/view/Basket';
 import { Modal } from './components/view/Modal';
 import { API_URL, CDN_URL } from './utils/constants';
 import { IProduct } from './types/index';
+import { ProductCard } from './components/view/ProductCard';
+import { BasketItem } from './components/view/BasketItem';
 
 const events = new EventEmitter();
 const api = new LarekApi(CDN_URL, API_URL);
@@ -29,20 +31,51 @@ const basketCounter = document.querySelector(
 
 // Подписываемся на событие productsLoaded до загрузки продуктов
 events.on('productsLoaded', (products: IProduct[]) => {
-	mainPage.render(products);
+	// Создаем экземпляры ProductCard и получаем их элементы
+	const productCardElements = products.map((product) => {
+		const productCard = new ProductCard(product, events);
+		return productCard.getElement();
+	});
+	// Устанавливаем карточки товаров в MainPage
+	mainPage.setProductCards(productCardElements);
+	// Инициализация состояния корзины при первой загрузке
+	const initialBasketItems = model.getBasketProducts();
+	const hasItems = initialBasketItems.length > 0;
+	basket.setCheckoutButtonEnabled(hasItems);
 });
 
 // Загружаем продукты при старте приложения
 controller.loadProducts();
 
 // Обновление корзины и счетчика
-events.on('basketUpdated', (basketItems: IProduct[]) => {
+events.on('basket:change', (basketItems: IProduct[]) => {
 	basketCounter.textContent = basketItems.length.toString();
-	basket.render(basketItems);
+	// Создаём экземпляры BasketItem и получаем их элементы
+	const basketItemElements = basketItems.map((product, index) => {
+		const basketItem = new BasketItem(product, events);
+		basketItem.setIndex(index + 1);
+		return basketItem.getElement();
+	});
+	// Устанавливаем элементы корзины
+	basket.setBasketItems(basketItemElements);
+	// Устанавливаем общую стоимость
+	const totalPrice = basketItems.reduce(
+		(total, item) => total + (item.price || 0),
+		0
+	);
+	basket.setTotalPrice(totalPrice);
+	// Включаем или отключаем кнопку оформления заказа
+	const hasItems = basketItems.length > 0;
+	basket.setCheckoutButtonEnabled(hasItems);
 });
 
 // Показ корзины при клике на кнопку корзины
 basketButton.addEventListener('click', () => {
 	modal.setContent(basket.getElement());
 	modal.open();
+});
+
+// Закрытие окна после успешного оформления заказа
+events.on('success:close', () => {
+	modal.close(); // Закрываем модальное окно
 });

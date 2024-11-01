@@ -1,6 +1,7 @@
 import { IProduct, IProductCard } from '../../types/index';
 import { IEvents } from '../base/events';
 import { ensureElement } from '../../utils/utils';
+import { categoryColor } from '../../utils/constants';
 
 export class ProductCard implements IProductCard {
 	private element: HTMLElement;
@@ -27,6 +28,7 @@ export class ProductCard implements IProductCard {
 		// Находим элементы карточки
 		const titleElement = ensureElement('.card__title', this.element);
 		const categoryElement = ensureElement('.card__category', this.element);
+
 		const imageElement = ensureElement(
 			'.card__image',
 			this.element
@@ -41,6 +43,11 @@ export class ProductCard implements IProductCard {
 			this.product.price === null
 				? 'Бесценно'
 				: `${this.product.price} синапсов`;
+
+		// Добавляем CSS-класс фона в зависимости от категории
+		const categoryClass =
+			categoryColor[this.product.category] || 'card__category_default';
+		categoryElement.classList.add(categoryClass);
 
 		// Обработчик клика по карточке для открытия информации о продукте
 		this.element.addEventListener('click', (event) => {

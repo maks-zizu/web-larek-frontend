@@ -67,6 +67,11 @@ export class OrderAddress implements IOrderAddress {
 		});
 	}
 
+	public reset(): void {
+		// Сбрасываем поля формы
+		this.formElement.reset();
+	}
+
 	private validateForm() {
 		if (this.payment && this.address) {
 			this.submitButton.disabled = false;

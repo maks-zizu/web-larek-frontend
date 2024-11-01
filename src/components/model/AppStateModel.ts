@@ -35,20 +35,20 @@ export class AppStateModel extends Model implements IAppState {
 	addToBasket(productId: string): void {
 		if (!this.isProductInBasket(productId)) {
 			this.basket.push(productId);
-			this.emit('basketUpdated', this.getBasketProducts());
+			this.emit('basket:change', this.getBasketProducts());
 		}
 	}
 
 	// Удаление товара из корзины по его productId
 	removeFromBasket(productId: string): void {
 		this.basket = this.basket.filter((id) => id !== productId);
-		this.emit('basketUpdated', this.getBasketProducts());
+		this.emit('basket:change', this.getBasketProducts());
 	}
 
 	// Очистка корзины
 	clearBasket(): void {
 		this.basket = [];
-		this.emit('basketUpdated', this.getBasketProducts());
+		this.emit('basket:change', this.getBasketProducts());
 	}
 
 	// Получение количества товаров в корзине
@@ -95,7 +95,7 @@ export class AppStateModel extends Model implements IAppState {
 	}
 
 	// Вспомогательный метод для получения списка товаров в корзине
-	private getBasketProducts(): IProduct[] {
+	getBasketProducts(): IProduct[] {
 		return this.basket
 			.map((id) => this.getProductInfo(id))
 			.filter((product): product is IProduct => !!product);

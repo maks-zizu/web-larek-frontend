@@ -241,14 +241,13 @@ yarn build
 
 Атрибуты:
 
-- public counter: number — счетчик товаров в корзине.
-- public catalog: HTMLElement[] — массив элементов карточек товаров.
-- private galleryElement: HTMLElement — элемент галереи для отображения товаров.
+- private galleryElement: HTMLElement — элемент галереи, в котором отображаются карточки товаров.
 
 Методы:
 
-- constructor(events: IEvents, rootElement: HTMLElement) — инициализирует главную страницу с EventEmitter и корневым элементом.
-- public render(products: IProduct[]): void — рендерит список товаров на странице.
+- constructor(events: IEvents, rootElement: HTMLElement) — создает экземпляр MainPage и инициализирует галерею.
+- public setProductCards(productCardElements: HTMLElement[]): void — добавляет карточки товаров в галерею.
+- public render(): HTMLElement — возвращает корневой элемент страницы.
 
 ### Класс `ProductCard`
 
@@ -265,6 +264,12 @@ yarn build
 - constructor(product: IProduct, events: IEvents) — инициализирует карточку товара с данными товара и EventEmitter.
 - private init(): void — инициализирует элементы карточки и привязывает обработчики событий.
 - public getElement(): HTMLElement — возвращает DOM-элемент карточки.
+- public get id(): string — возвращает ID товара.
+- public get title(): string — возвращает название товара.
+- public get category(): string — возвращает категорию товара.
+- public get image(): string — возвращает URL изображения товара.
+- public get description(): string — возвращает описание товара.
+- public get price(): number | null — возвращает цену товара.
 
 ### Класс `ProductPreview`
 
@@ -286,25 +291,44 @@ yarn build
 - private handleButtonClick(): void — обрабатывает событие клика на кнопку добавления/удаления товара из корзины и отправляет событие toggleBasketItem с ID товара. Также инициирует закрытие модального окна после нажатия.
 - public getElement(): HTMLElement — возвращает корневой DOM-элемент предпросмотра товара для отображения в модальном окне.
 
+### Класс `BasketItem`
+
+BasketItem представляет собой элемент корзины с товарами, отображающий информацию о продукте и позволяющий удалять его из корзины.
+
+Атрибуты:
+
+- private itemElement: HTMLElement — DOM-элемент, представляющий элемент корзины.
+- private product: IProduct — данные о продукте, представленные в корзине.
+- private events: IEvents — экземпляр EventEmitter для управления событиями.
+
+Методы:
+
+- constructor(product: IProduct, events: IEvents) — создает экземпляр BasketItem.
+- private init(): void — инициализирует элементы внутри корзины и привязывает обработчики событий.
+- public setIndex(index: number): void — устанавливает индекс элемента в списке корзины.
+- public getElement(): HTMLElement — возвращает DOM-элемент корзины.
+
 ### Класс `Basket`
 
 Класс Basket представляет корзину товаров. Он отображает список товаров в корзине и позволяет оформить заказ.
 
 Атрибуты:
 
-- private basketElement: HTMLElement — корневой DOM-элемент корзины.
-- private basketList: HTMLElement — элемент списка товаров в корзине.
-- private totalPriceElement: HTMLElement — элемент, отображающий общую стоимость корзины.
+- private basketElement: HTMLElement — корневой DOM-элемент корзины, который содержит все элементы корзины.
+- private basketList: HTMLElement — элемент списка, в котором отображаются товары, добавленные в корзину.
+- private totalPriceElement: HTMLElement — элемент, отображающий общую стоимость всех товаров в корзине.
 - private checkoutButton: HTMLButtonElement — кнопка для перехода к оформлению заказа.
-- private events: IEvents — экземпляр EventEmitter для обработки событий корзины.
+- private events: IEvents — экземпляр EventEmitter для обработки событий, связанных с корзиной.
+- private basketButton: HTMLButtonElement — кнопка корзины в заголовке для вызова модального окна корзины.
 
 Методы:
 
-- constructor(events: IEvents) — инициализирует корзину, связывая ее с экземпляром EventEmitter для прослушивания и обработки событий.
-- private bindEvents(): void — привязывает события, такие как клик по кнопке оформления и обновления корзины.
-- public render(basketItems: IProduct[]): void — рендерит товары в корзине, обновляя список товаров и общую стоимость на основе переданных данных.
-- private createBasketItem(product: IProduct, index: number): HTMLElement — создает DOM-элемент для каждого товара в корзине с его названием, ценой и кнопкой для удаления.
-- public getElement(): HTMLElement — возвращает корневой элемент корзины для размещения на странице.
+- constructor(events: IEvents) — создает экземпляр класса Basket и инициализирует его, связывая с переданным экземпляром EventEmitter для обработки событий корзины. Находит элементы корзины в DOM и привязывает события.
+- private bindEvents(): void — привязывает обработчики событий для корзины, такие как клик по кнопке оформления заказа, который вызывает событие checkout.
+- public setBasketItems(basketItemElements: HTMLElement[]): void — принимает массив DOM-элементов товаров и отображает их в корзине. Предварительно очищает текущий список товаров.
+- public setTotalPrice(totalPrice: number): void — обновляет элемент, отображающий общую стоимость товаров в корзине, с учетом переданной суммы.
+- public setCheckoutButtonEnabled(enabled: boolean): void — включает или отключает кнопку оформления заказа в зависимости от наличия товаров в корзине.
+- public getElement(): HTMLElement — возвращает корневой элемент корзины, который может быть использован для добавления корзины на страницу.
 
 ### Класс `OrderAdress`
 
@@ -325,6 +349,7 @@ yarn build
 - constructor(events: IEvents) — инициализирует форму.
 - private bindEvents(): void — привязывает обработчики событий формы.
 - private validateForm(): void — проверяет валидность формы и активирует/деактивирует кнопку отправки.
+- public reset(): void — сбрасывает поля формы.
 - public getElement(): HTMLElement — возвращает DOM-элемент формы.
 
 ### Класс `OrderContacts`
@@ -346,6 +371,7 @@ yarn build
 - constructor(events: IEvents) — инициализирует форму.
 - private bindEvents(): void — привязывает обработчики событий формы.
 - private validateForm(): void — проверяет валидность формы и активирует/деактивирует кнопку отправки.
+- public reset(): void — сбрасывает поля формы.
 - public getElement(): HTMLElement — возвращает DOM-элемент формы.
 
 ### Класс `Success`
@@ -355,12 +381,15 @@ yarn build
 Атрибуты:
 
 - public total: number — общая сумма заказа.
-- private element: HTMLElement — DOM-элемент сообщения.
+- private element: HTMLElement — DOM-элемент для сообщения об успехе.
+- private descriptionElement: HTMLElement — элемент для отображения текста с суммой заказа.
+- private events: IEvents — экземпляр EventEmitter для обработки событий закрытия.
 
 Методы:
 
-- constructor(totalPrice: number) — инициализирует сообщение с общей суммой заказа.
-- private init(): void — инициализирует элементы и привязывает обработчики событий.
+- constructor(events: IEvents) — инициализирует DOM-элемент с привязкой событий.
+- private init(): void — инициализирует элементы и привязывает обработчик события закрытия.
+- public setTotal(total: number): void — устанавливает общую стоимость заказа и обновляет текст сообщения.
 - public getElement(): HTMLElement — возвращает DOM-элемент сообщения.
 
 ### Класс `Modal`
@@ -399,9 +428,13 @@ yarn build
 Атрибуты:
 
 - public events: IEvents — экземпляр EventEmitter для обмена событиями между компонентами.
-- public model: AppStateModel — модель состояния приложения, хранящая информацию о товарах, корзине и заказах.
+- public model: AppStateModel — модель состояния приложения, содержащая данные о товарах, корзине и заказах.
 - public api: LarekApi — экземпляр API-клиента для взаимодействия с сервером.
-- public modal: Modal — экземпляр Modal для управления модальными окнами.
+- public modal: Modal — экземпляр класса Modal для управления отображением модальных окон.
+- private orderAddress: OrderAddress — экземпляр класса OrderAddress для отображения формы с информацией о доставке.
+- private orderContacts: OrderContacts — экземпляр класса OrderContacts для отображения формы с контактной информацией.
+- private successMessage: Success — экземпляр класса Success для отображения сообщения об успешном оформлении заказа.
+- private productPreview: ProductPreview — экземпляр класса ProductPreview для предпросмотра товара.
 
 Методы:
 
@@ -456,8 +489,8 @@ yarn build
 
   - View (ProductPreview) эмитирует событие toggleBasketItem.
   - Presenter подписывается на toggleBasketItem и вызывает toggleBasketItem в Model для добавления или удаления товара.
-  - Model обновляет корзину и эмитирует basketUpdated.
-  - View (Basket, MainPage) подписывается на basketUpdated и обновляет отображение корзины и счётчика.
+  - Model обновляет корзину и эмитирует basket:change.
+  - View (Basket, MainPage) подписывается на basket:change и обновляет отображение корзины и счётчика.
 
 - Клик на кнопку корзины в шапке сайта (открытие корзины):
 
@@ -465,7 +498,8 @@ yarn build
 
 - Клик на кнопку "Оформить" (`checkout`):
 
-  - View: Эмитирует checkout, который инициирует отображение формы с адресом и способом оплаты через Presenter.
+  - View (Basket) эмитирует checkout, который инициирует отображение формы с адресом и способом оплаты через Presenter.
+  - Перед отображением формы, MainPresenter проверяет, есть ли товары в корзине, и не позволяет начать оформление заказа, если корзина пуста.
 
 #### Отправка форм:
 
@@ -481,19 +515,22 @@ yarn build
 
 #### Обновления состояния:
 
-- Обновление корзины (`basketUpdated`):
+- Обновление корзины (`basket:change`):
 
-  - Model: После изменения корзины эмитирует basketUpdated.
-  - View (Basket, MainPage): Подписаны на basketUpdated для обновления корзины и счётчика.
+  - Model: После изменения корзины эмитирует basket:change.
+  - View (Basket, MainPage): Подписаны на basket:change для обновления корзины и счётчика.
+  - При первой загрузке приложения, после загрузки продуктов, View (Basket) инициализирует состояние кнопки "Оформить" в соответствии с наличием товаров в корзине.
 
 - Загрузка списка товаров (`productsLoaded`):
 
   - Model загружает данные о товарах, затем эмитирует productsLoaded.
   - View (MainPage) подписывается на productsLoaded и вызывает render.
+  - После загрузки продуктов, View инициализирует состояние корзины и кнопки "Оформить".
 
 - Оформление заказа (`orderSubmitted`):
 
   - Model отправляет данные заказа через API, после успешного ответа от сервера эмитирует orderSubmitted.
+  - Presenter подписывается на orderSubmitted и вызывает showSuccess для отображения сообщения об успешном оформлении заказа.
   - View (Success) показывает сообщение об успешном оформлении заказа.
 
 ### Пример полного сценария взаимодействия между слоями:
@@ -514,10 +551,10 @@ yarn build
   - Вызывает model.toggleBasketItem(productId) для добавления товара в корзину.
 - Model:
   - Обновляет состояние корзины.
-  - Эмитирует basketUpdated для уведомления о том, что корзина обновилась.
+  - Эмитирует basket:change для уведомления о том, что корзина обновилась.
 - View (Basket, MainPage):
-  - Подписаны на basketUpdated.
-  - Обновляют отображение корзины и счётчика.
+  - Подписаны на basket:change.
+  - Обновляют отображение корзины, счётчика и состояние кнопки "Оформить".
 
 3. Пользователь кликает на кнопку "Оформить" в корзине.
 
@@ -531,6 +568,7 @@ yarn build
 - View (OrderAddress): Эмитирует orderAddressSubmitted с payment и address.
 - Presenter:
   - Подписан на orderAddressSubmitted.
+  - Вызывает model.setOrderField для сохранения данных.
   - Вызывает openContactsForm для отображения следующей формы с контактными данными.
 
 5. Пользователь заполняет контактные данные и нажимает "Отправить заказ".
@@ -539,8 +577,11 @@ yarn build
 - Presenter:
   - Подписан на orderContactsSubmitted.
   - Вызывает submitOrder для отправки заказа.
+  - Вызывает showSuccess для отображения сообщения об успешном оформлении заказа.
 - Model:
   - Обрабатывает заказ и отправляет данные на сервер.
   - После успешного ответа эмитирует orderSubmitted.
 - View (Success):
   - Подписан на orderSubmitted и отображает сообщение об успешном заказе.
+  - Подписан на success:close.
+  - Вызывает modal.close() для закрытия модального окна.

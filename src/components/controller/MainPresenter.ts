@@ -13,6 +13,10 @@ export class MainPresenter implements IMainPresenter {
 	public model: AppStateModel;
 	public api: LarekApi;
 	public modal: Modal;
+	private orderAddress: OrderAddress;
+	private orderContacts: OrderContacts;
+	private successMessage: Success;
+	private productPreview: ProductPreview;
 
 	constructor(
 		events: IEvents,
@@ -24,6 +28,13 @@ export class MainPresenter implements IMainPresenter {
 		this.model = model;
 		this.api = api;
 		this.modal = modal;
+
+		// Создаем экземпляры форм и сообщений один раз
+		this.orderAddress = new OrderAddress(this.events);
+		this.orderContacts = new OrderContacts(this.events);
+		this.successMessage = new Success(this.events);
+		this.productPreview = new ProductPreview(this.events);
+
 		this.bindEvents();
 	}
 
@@ -64,7 +75,7 @@ export class MainPresenter implements IMainPresenter {
 		// Событие для открытия информации о товаре
 		this.events.on<{ productId: string }>(
 			'openProductInfo',
-			async ({ productId }) => {
+			({ productId }) => {
 				const product = this.model.getProductInfo(productId);
 				if (product) {
 					this.showProductPreview(product);
@@ -81,17 +92,21 @@ export class MainPresenter implements IMainPresenter {
 	/**
 	 * Асинхронная загрузка списка продуктов из API и обновление модели
 	 */
-	async loadProducts(): Promise<void> {
-		const products = await this.api.getProductList();
-		this.model.setProductList(products);
+	public async loadProducts(): Promise<void> {
+		try {
+			const products = await this.api.getProductList();
+			this.model.setProductList(products);
+		} catch (error) {
+			console.error('Ошибка при загрузке продуктов:', error);
+		}
 	}
 
 	/**
 	 * Показ формы для выбора способа оплаты и адреса
 	 */
 	public handleCheckout(): void {
-		const orderAddress = new OrderAddress(this.events);
-		this.modal.setContent(orderAddress.getElement());
+		// this.orderAddress.reset(); // Сброс формы перед использованием
+		this.modal.setContent(this.orderAddress.getElement());
 		this.modal.open();
 	}
 
@@ -99,8 +114,8 @@ export class MainPresenter implements IMainPresenter {
 	 * Открытие формы для ввода контактных данных
 	 */
 	public openContactsForm(): void {
-		const orderContacts = new OrderContacts(this.events);
-		this.modal.setContent(orderContacts.getElement());
+		// this.orderContacts.reset(); // Сброс формы перед использованием
+		this.modal.setContent(this.orderContacts.getElement());
 		this.modal.open();
 	}
 
@@ -108,22 +123,26 @@ export class MainPresenter implements IMainPresenter {
 	 * Асинхронная отправка заказа на сервер с использованием API, обновление состояния и уведомление об успешном оформлении заказа
 	 */
 	public async submitOrder(): Promise<void> {
-		const order = {
-			...this.model.order,
-			items: this.model.basket.map((el) => el),
-			total: this.model.getTotalBasketPrice(),
-		};
-		const orderData = await this.api.createOrder(order);
-		this.events.emit('orderSubmitted', orderData);
-		this.model.clearBasket();
+		try {
+			const order = {
+				...this.model.order,
+				items: [...this.model.basket],
+				total: this.model.getTotalBasketPrice(),
+			};
+			const orderData = await this.api.createOrder(order);
+			this.events.emit('orderSubmitted', orderData);
+			this.model.clearBasket();
+		} catch (error) {
+			console.error('Ошибка при отправке заказа:', error);
+		}
 	}
 
 	/**
 	 * Показ сообщения об успешном оформлении заказа
 	 */
 	public showSuccess(total: number): void {
-		const successMessage = new Success(total);
-		this.modal.setContent(successMessage.getElement());
+		this.successMessage.setTotal(total); // Устанавливаем сумму заказа
+		this.modal.setContent(this.successMessage.getElement());
 		this.modal.open();
 	}
 
@@ -131,10 +150,9 @@ export class MainPresenter implements IMainPresenter {
 	 * Показ информации о товаре в модальном окне
 	 */
 	public showProductPreview(product: IProduct): void {
-		const productPreview = new ProductPreview(this.events);
 		const isInBasket = this.model.isProductInBasket(product.id);
-		productPreview.renderProductData(product, isInBasket);
-		this.modal.setContent(productPreview.getElement());
+		this.productPreview.renderProductData(product, isInBasket);
+		this.modal.setContent(this.productPreview.getElement());
 		this.modal.open();
 	}
 }

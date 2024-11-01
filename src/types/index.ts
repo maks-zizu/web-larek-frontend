@@ -67,13 +67,16 @@ export interface IAppState {
  * Интерфейс описывающий главную страницу
  * */
 export interface IMainPage {
-	counter: number; // Счётчик товаров в корзине
-	catalog: HTMLElement[]; // Массив карточек с товарами
+	/**
+	 * Метод для установки карточек товаров в галерею
+	 */
+	setProductCards(productCardElements: HTMLElement[]): void;
 
-	// Метод для рендеринга карточек товаров
-	render(products: IProduct[]): void;
+	/**
+	 * Метод для получения корневого элемента и рендеринга страницы
+	 */
+	render(): HTMLElement;
 }
-
 /**
  * Интерфейс карточки товара
  */
@@ -84,8 +87,10 @@ export interface IProductCard {
 	image: string; // URL изображения товара
 	description: string; // Описание товара
 	price: number | null; // Цена товара
-
-	getElement(): HTMLElement; // Метод для получения DOM-элемента карточки
+	/**
+	 * Метод для получения DOM-элемента карточки товара
+	 */
+	getElement(): HTMLElement;
 }
 
 /**
@@ -98,10 +103,19 @@ export interface IProductPreview {
 }
 
 /*
+ * Интерфейс товара корзины
+ * */
+export interface IBasketItem {
+	setIndex(index: number): void; // Устанавливает индекс элемента корзины
+	getElement(): HTMLElement; // Возвращает DOM-элемент корзины
+}
+
+/*
  * Интерфейс корзины товаров
  * */
 export interface IBasket {
-	render(basketItems: IProduct[]): void; // Метод для рендеринга товаров в корзине
+	setBasketItems(basketItemElements: HTMLElement[]): void; // Метод для установки товаров в корзине
+	setTotalPrice(totalPrice: number): void; // Метод для установки общей стоимости
 	getElement(): HTMLElement; // Метод для получения основного элемента корзины
 }
 
@@ -122,7 +136,9 @@ export interface IOrderAddress {
 	address: string; // Адрес доставки
 
 	getElement(): HTMLElement; // Получить DOM-элемент формы
+	reset(): void; // Сбрасывает поля формы
 }
+
 /**
  * Интерфейс формы с контактной информацией
  */
@@ -131,6 +147,7 @@ export interface IOrderContacts {
 	phone: string; // Телефон
 
 	getElement(): HTMLElement; // Получить DOM-элемент формы
+	reset(): void; // Сбрасывает поля формы
 }
 
 /**
@@ -138,6 +155,8 @@ export interface IOrderContacts {
  */
 export interface ISuccess {
 	total: number; // Общая стоимость заказа
+	setTotal(total: number): void; // Устанавливает общую стоимость заказа
+	getElement(): HTMLElement; // Возвращает основной элемент для отображения
 }
 
 /**
@@ -148,7 +167,6 @@ export interface IMainPresenter {
 	model: AppStateModel;
 	api: LarekApi;
 	modal: IModal;
-
 	/**
 	 * Метод для связывания событий с обработчиками Презентера
 	 */

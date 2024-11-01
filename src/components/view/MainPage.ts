@@ -1,12 +1,9 @@
-import { IMainPage, IProduct } from '../../types';
+import { IMainPage } from '../../types';
 import { ensureElement } from '../../utils/utils';
 import { IEvents } from '../base/events';
 import { BaseView } from './BaseView';
-import { ProductCard } from './ProductCard';
 
 export class MainPage extends BaseView implements IMainPage {
-	public counter = 0;
-	public catalog: HTMLElement[] = [];
 	private galleryElement: HTMLElement;
 
 	constructor(events: IEvents, rootElement: HTMLElement) {
@@ -16,18 +13,20 @@ export class MainPage extends BaseView implements IMainPage {
 	}
 
 	/**
-	 * Метод для рендеринга карточек товаров
+	 * Метод для установки карточек товаров в галерею
 	 */
-	public render(products: IProduct[]): void {
-		// Очищаем галерею перед рендером
-		this.galleryElement.innerHTML = '';
-		this.catalog = []; // Очищаем массив карточек
-
-		// Создаем карточки товаров и добавляем их в галерею
-		products.forEach((product) => {
-			const productCard = new ProductCard(product, this.events);
-			this.catalog.push(productCard.getElement()); // Добавляем элемент в массив
-			this.galleryElement.appendChild(productCard.getElement()); // Добавляем в DOM
+	public setProductCards(productCardElements: HTMLElement[]): void {
+		this.galleryElement.innerHTML = ''; // Очистка перед добавлением
+		productCardElements.forEach((cardElement) => {
+			this.galleryElement.appendChild(cardElement);
 		});
+	}
+
+	/**
+	 * Метод для получения корневого элемента
+	 */
+	public render(): HTMLElement {
+		// Возвращаем корневой элемент
+		return this.rootElement;
 	}
 }

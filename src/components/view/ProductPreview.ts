@@ -1,6 +1,7 @@
 import { IProduct, IProductPreview } from '../../types/index';
 import { IEvents } from '../base/events';
 import { ensureElement } from '../../utils/utils';
+import { categoryColor } from '../../utils/constants';
 
 export class ProductPreview implements IProductPreview {
 	private events: IEvents;
@@ -31,11 +32,11 @@ export class ProductPreview implements IProductPreview {
 
 		// Обработчик клика по кнопке добавления/удаления товара
 		this.addButton.addEventListener('click', () => {
-			this.handleButtonClick();
+			if (!this.addButton.disabled) this.handleButtonClick();
 		});
 
 		// Обновляем текст кнопки при обновлении корзины
-		this.events.on('basketUpdated', () => {
+		this.events.on('basket:change', () => {
 			this.updateButtonLabel();
 		});
 	}
@@ -63,6 +64,20 @@ export class ProductPreview implements IProductPreview {
 		priceElement.textContent =
 			product.price === null ? 'Бесценно' : `${product.price} синапсов`;
 		descriptionElement.textContent = product.description;
+
+		// Добавляем CSS-класс фона в зависимости от категории
+		const categoryClass =
+			categoryColor[product.category] || 'card__category_default';
+		categoryElement.className = `card__category ${categoryClass}`;
+
+		// Отключаем кнопку, если у товара нет цены
+		if (product.price === null) {
+			this.addButton.disabled = true;
+			this.addButton.classList.add('button--disabled');
+		} else {
+			this.addButton.disabled = false;
+			this.addButton.classList.remove('button--disabled');
+		}
 
 		// Устанавливаем текст кнопки на основе состояния корзины
 		this.updateButtonLabel(isInBasket);

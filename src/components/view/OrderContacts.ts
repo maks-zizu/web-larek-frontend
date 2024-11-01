@@ -62,6 +62,11 @@ export class OrderContacts implements IOrderContacts {
 		});
 	}
 
+	public reset(): void {
+		// Сбрасываем поля формы
+		this.formElement.reset();
+	}
+
 	private validateForm() {
 		if (this.email && this.phone) {
 			this.submitButton.disabled = false;

@@ -1,4 +1,4 @@
-import { IBasket, IProduct } from '../../types/index';
+import { IBasket } from '../../types/index';
 import { IEvents } from '../base/events';
 import { cloneTemplate, ensureElement } from '../../utils/utils';
 
@@ -8,6 +8,7 @@ export class Basket implements IBasket {
 	private totalPriceElement: HTMLElement;
 	private checkoutButton: HTMLButtonElement;
 	private events: IEvents;
+	private basketButton: HTMLButtonElement;
 
 	constructor(events: IEvents) {
 		this.events = events;
@@ -26,6 +27,11 @@ export class Basket implements IBasket {
 			this.basketElement
 		) as HTMLButtonElement;
 
+		this.basketButton = ensureElement(
+			'.button',
+			this.basketElement
+		) as HTMLButtonElement;
+
 		// Привязываем события
 		this.bindEvents();
 	}
@@ -35,66 +41,37 @@ export class Basket implements IBasket {
 		this.checkoutButton.addEventListener('click', () => {
 			this.events.emit('checkout');
 		});
+	}
 
-		// Слушаем обновление корзины и вызываем render для обновления представления
-		this.events.on<IProduct[]>('basketUpdated', (basketItems) => {
-			this.render(basketItems);
+	/**
+	 * Устанавливает элементы товаров в корзине.
+	 */
+	public setBasketItems(basketItemElements: HTMLElement[]): void {
+		// Очищаем список товаров в корзине
+		this.basketList.innerHTML = '';
+
+		// Добавляем элементы товаров в корзину
+		basketItemElements.forEach((itemElement) => {
+			this.basketList.appendChild(itemElement);
 		});
 	}
 
 	/**
-	 * Метод рендеринга элементов корзины на основе полученных данных о продуктах.
+	 * Устанавливает общую стоимость корзины.
 	 */
-	public render(basketItems: IProduct[]): void {
-		// Очищаем список товаров в корзине
-		this.basketList.innerHTML = '';
-
-		// Добавляем каждый товар в корзину
-		basketItems.forEach((product, index) => {
-			const basketItem = this.createBasketItem(product, index + 1);
-			this.basketList.appendChild(basketItem);
-		});
-
-		// Обновляем общую стоимость
-		const totalPrice = basketItems.reduce(
-			(total, item) => total + (item.price || 0),
-			0
-		);
+	public setTotalPrice(totalPrice: number): void {
 		this.totalPriceElement.textContent = `${totalPrice} синапсов`;
 	}
 
 	/**
-	 * Создает и возвращает DOM-элемент для товара в корзине.
+	 * Включает или отключает кнопку оформления заказа.
 	 */
-	private createBasketItem(product: IProduct, index: number): HTMLElement {
-		const template = document.getElementById(
-			'card-basket'
-		) as HTMLTemplateElement;
-		const itemElement = template.content.firstElementChild.cloneNode(
-			true
-		) as HTMLElement;
-
-		const indexElement = ensureElement('.basket__item-index', itemElement);
-		const titleElement = ensureElement('.card__title', itemElement);
-		const priceElement = ensureElement('.card__price', itemElement);
-		const deleteButton = ensureElement('.basket__item-delete', itemElement);
-
-		indexElement.textContent = index.toString();
-		titleElement.textContent = product.title;
-		priceElement.textContent = `${product.price} синапсов`;
-		priceElement.textContent =
-			product.price === null ? 'Бесценно' : `${product.price} синапсов`;
-
-		// Обработчик удаления товара из корзины
-		deleteButton.addEventListener('click', () => {
-			this.events.emit('toggleBasketItem', { productId: product.id });
-		});
-
-		return itemElement;
+	public setCheckoutButtonEnabled(enabled: boolean): void {
+		this.basketButton.disabled = !enabled;
 	}
 
 	/**
-	 * Возвращает основной элемент корзины
+	 * Возвращает основной элемент корзины.
 	 */
 	public getElement(): HTMLElement {
 		return this.basketElement;
