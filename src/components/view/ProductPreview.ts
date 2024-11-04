@@ -9,6 +9,12 @@ export class ProductPreview implements IProductPreview {
 	private addButton: HTMLButtonElement;
 	private productId: string;
 
+	private titleElement: HTMLElement;
+	private categoryElement: HTMLElement;
+	private imageElement: HTMLImageElement;
+	private priceElement: HTMLElement;
+	private descriptionElement: HTMLElement;
+
 	constructor(events: IEvents) {
 		this.events = events;
 
@@ -25,6 +31,19 @@ export class ProductPreview implements IProductPreview {
 	}
 
 	private init(): void {
+		// Находим элементы карточки и заполняем их данными о товаре
+		this.titleElement = ensureElement('.card__title', this.element);
+		this.categoryElement = ensureElement('.card__category', this.element);
+		this.imageElement = ensureElement(
+			'.card__image',
+			this.element
+		) as HTMLImageElement;
+		this.priceElement = ensureElement('.card__price', this.element);
+		this.descriptionElement = ensureElement('.card__text', this.element);
+		this.addButton = ensureElement(
+			'.card__button',
+			this.element
+		) as HTMLButtonElement;
 		this.addButton = ensureElement(
 			'.card__button',
 			this.element
@@ -47,28 +66,18 @@ export class ProductPreview implements IProductPreview {
 	public renderProductData(product: IProduct, isInBasket: boolean): void {
 		this.productId = product.id; // Сохраняем ID товара для использования в handleButtonClick
 
-		// Находим элементы карточки и заполняем их данными о товаре
-		const titleElement = ensureElement('.card__title', this.element);
-		const categoryElement = ensureElement('.card__category', this.element);
-		const imageElement = ensureElement(
-			'.card__image',
-			this.element
-		) as HTMLImageElement;
-		const priceElement = ensureElement('.card__price', this.element);
-		const descriptionElement = ensureElement('.card__text', this.element);
-
-		titleElement.textContent = product.title;
-		categoryElement.textContent = product.category;
-		imageElement.src = product.image;
-		imageElement.alt = product.title;
-		priceElement.textContent =
+		this.titleElement.textContent = product.title;
+		this.categoryElement.textContent = product.category;
+		this.imageElement.src = product.image;
+		this.imageElement.alt = product.title;
+		this.priceElement.textContent =
 			product.price === null ? 'Бесценно' : `${product.price} синапсов`;
-		descriptionElement.textContent = product.description;
+		this.descriptionElement.textContent = product.description;
 
 		// Добавляем CSS-класс фона в зависимости от категории
 		const categoryClass =
 			categoryColor[product.category] || 'card__category_default';
-		categoryElement.className = `card__category ${categoryClass}`;
+		this.categoryElement.className = `card__category ${categoryClass}`;
 
 		// Отключаем кнопку, если у товара нет цены
 		if (product.price === null) {

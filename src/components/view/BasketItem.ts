@@ -6,6 +6,7 @@ export class BasketItem implements IBasketItem {
 	private itemElement: HTMLElement;
 	private product: IProduct;
 	private events: IEvents;
+	private indexElement: HTMLElement; // Сохраняем элемент индекса для многократного использования
 
 	constructor(product: IProduct, events: IEvents) {
 		this.product = product;
@@ -18,8 +19,9 @@ export class BasketItem implements IBasketItem {
 		this.itemElement = template.content.firstElementChild.cloneNode(
 			true
 		) as HTMLElement;
+		// Находим элементы и сохраняем их в свойства класса
+		this.indexElement = ensureElement('.basket__item-index', this.itemElement);
 
-		// Инициализируем элемент
 		this.init();
 	}
 
@@ -45,8 +47,7 @@ export class BasketItem implements IBasketItem {
 	}
 
 	public setIndex(index: number): void {
-		const indexElement = ensureElement('.basket__item-index', this.itemElement);
-		indexElement.textContent = index.toString();
+		this.indexElement.textContent = index.toString(); // Используем найденный элемент индекса
 	}
 
 	public getElement(): HTMLElement {

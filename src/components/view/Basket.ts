@@ -41,6 +41,8 @@ export class Basket implements IBasket {
 		this.checkoutButton.addEventListener('click', () => {
 			this.events.emit('checkout');
 		});
+
+		this.setCheckoutButtonEnabled(false);
 	}
 
 	/**

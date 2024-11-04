@@ -281,10 +281,15 @@ yarn build
 - private productId: string — id текущего товара, сохраняется для передачи в событие добавления/удаления из корзины.
 - private events: IEvents — экземпляр EventEmitter для обработки событий.
 - private addButton: HTMLButtonElement — кнопка для добавления/удаления товара из корзины.
+- private titleElement: HTMLElement — элемент для отображения заголовка товара.
+- private categoryElement: HTMLElement — элемент для отображения категории товара.
+- private imageElement: HTMLImageElement — элемент для отображения изображения товара.
+- private priceElement: HTMLElement — элемент для отображения цены товара.
+- private descriptionElement: HTMLElement — элемент для отображения описания
 
 Методы:
 
-- constructor(product: IProduct, events: IEvents, model: AppStateModel) — инициализирует предпросмотр товара.
+- constructor(events: IEvents) - Инициализирует экземпляр класса ProductPreview, принимает экземпляр IEvents для обработки событий. Загружает шаблон карточки предпросмотра и инициализирует внутренние элементы.
 - private init(): void — инициализирует элементы и привязывает обработчики событий.
 - public renderProductData(product: IProduct, isInBasket: boolean): void — отображает информацию о товаре, обновляет текстовые и графические данные карточки, а также изменяет состояние кнопки в зависимости от того, находится ли товар в корзине.
 - private updateButtonLabel(isInBasket = false): void — обновляет текст кнопки добавления/удаления товара на основе его наличия в корзине.
@@ -380,7 +385,6 @@ BasketItem представляет собой элемент корзины с 
 
 Атрибуты:
 
-- public total: number — общая сумма заказа.
 - private element: HTMLElement — DOM-элемент для сообщения об успехе.
 - private descriptionElement: HTMLElement — элемент для отображения текста с суммой заказа.
 - private events: IEvents — экземпляр EventEmitter для обработки событий закрытия.

@@ -3,7 +3,6 @@ import { ensureElement } from '../../utils/utils';
 import { IEvents } from '../base/events';
 
 export class Success implements ISuccess {
-	public total: number; // Общая стоимость заказа
 	private element: HTMLElement;
 	private events: IEvents; // Экземпляр событий для эмита
 	private descriptionElement: HTMLElement;
@@ -36,9 +35,8 @@ export class Success implements ISuccess {
 	}
 
 	public setTotal(total: number): void {
-		this.total = total;
 		// Устанавливаем текст сообщения с обновлённой суммой
-		this.descriptionElement.textContent = `Списано ${this.total} синапсов`;
+		this.descriptionElement.textContent = `Списано ${total} синапсов`;
 	}
 
 	public getElement(): HTMLElement {

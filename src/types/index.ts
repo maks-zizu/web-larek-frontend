@@ -154,7 +154,6 @@ export interface IOrderContacts {
  * Интерфейс успешной страницы заказа
  */
 export interface ISuccess {
-	total: number; // Общая стоимость заказа
 	setTotal(total: number): void; // Устанавливает общую стоимость заказа
 	getElement(): HTMLElement; // Возвращает основной элемент для отображения
 }

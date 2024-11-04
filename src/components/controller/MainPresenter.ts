@@ -105,18 +105,16 @@ export class MainPresenter implements IMainPresenter {
 	 * Показ формы для выбора способа оплаты и адреса
 	 */
 	public handleCheckout(): void {
-		// this.orderAddress.reset(); // Сброс формы перед использованием
+		this.orderAddress.reset(); // Сброс формы перед использованием
 		this.modal.setContent(this.orderAddress.getElement());
-		this.modal.open();
 	}
 
 	/**
 	 * Открытие формы для ввода контактных данных
 	 */
 	public openContactsForm(): void {
-		// this.orderContacts.reset(); // Сброс формы перед использованием
+		this.orderContacts.reset(); // Сброс формы перед использованием
 		this.modal.setContent(this.orderContacts.getElement());
-		this.modal.open();
 	}
 
 	/**
@@ -143,7 +141,6 @@ export class MainPresenter implements IMainPresenter {
 	public showSuccess(total: number): void {
 		this.successMessage.setTotal(total); // Устанавливаем сумму заказа
 		this.modal.setContent(this.successMessage.getElement());
-		this.modal.open();
 	}
 
 	/**

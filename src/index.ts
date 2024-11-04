@@ -38,10 +38,6 @@ events.on('productsLoaded', (products: IProduct[]) => {
 	});
 	// Устанавливаем карточки товаров в MainPage
 	mainPage.setProductCards(productCardElements);
-	// Инициализация состояния корзины при первой загрузке
-	const initialBasketItems = model.getBasketProducts();
-	const hasItems = initialBasketItems.length > 0;
-	basket.setCheckoutButtonEnabled(hasItems);
 });
 
 // Загружаем продукты при старте приложения
